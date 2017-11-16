@@ -13,7 +13,7 @@ class Handler
 public:
   void render();
   void load(std::string filename);
-  void setScale(int s) { scale = s; }
+  void setScale(double s) { scale = s; }
   void setTranslate(double x, double y, double z)
   {
     changeTranslate = true;
@@ -21,9 +21,13 @@ public:
     translate[1] = y;
     translate[2] = z;
   }
-  void setRotate(double deg)
+  void setRotateXZ(double deg)
   {
-    rotateDeg = deg;
+    rotateXZDeg = deg;
+  }
+  void setRotateYZ(double deg)
+  {
+    rotateYZDeg = deg;
   }
 
 private:
@@ -31,11 +35,12 @@ private:
   std::vector<FacePoint> *faces;
   GLdouble *vertices;
   Parser parser;
-  int scale = 1;
+  double scale = 1;
   bool changeTranslate = false;
   double translate[3] = {0, 0, 0};
   bool changeRotate = false;
-  double rotateDeg = 0;
+  double rotateXZDeg = 0;
+  double rotateYZDeg = 0;
 };
 
 void Handler::load(std::string filename)
@@ -44,25 +49,16 @@ void Handler::load(std::string filename)
   facesN = parser.getNumFaces();
   faces = parser.getFaces();
   vertices = parser.getVertices();
-  srand(time(NULL));
 }
 
 void Handler::render()
 {
-  /* initialize random seed: */
+  glPushMatrix();
+  glTranslated(translate[0], translate[1], translate[2]);
+  glRotated(rotateXZDeg, 0, 1, 0);
+  glRotated(rotateYZDeg, 1, 0, 0);
+  glScalef(scale, scale, scale);
 
-  if (scale != 1)
-  {
-    glScalef(scale, scale, scale);
-  }
-  if (changeTranslate)
-  {
-    glTranslated(translate[0], translate[1], translate[2]);
-  }
-  if (rotateDeg != 0)
-  {
-    glRotated(rotateDeg, 0, 1, 0);
-  }
   for (int i = 0; i < facesN; i++)
   {
     glBegin(GL_POLYGON);
@@ -83,18 +79,20 @@ void Handler::render()
 
     glEnd();
   }
-  if (scale != 1)
-  {
-    glScalef(1 / scale, 1 / scale, 1 / scale);
-  }
-  if (changeTranslate)
-  {
-    glTranslated(-translate[0], -translate[1], -translate[2]);
-  }
-  if (rotateDeg != 0)
-  {
-    glRotated(-rotateDeg, 0, 1, 0);
-  }
+  glPopMatrix();
+  // if (scale != 1)
+  // {
+  //   glScalef(1 / scale, 1 / scale, 1 / scale);
+  // }
+  // if (changeTranslate)
+  // {
+  //   glTranslated(-translate[0], -translate[1], -translate[2]);
+  // }
+  // if (rotateDeg != 0)
+  // {
+  //   glRotated(-rotateXZDeg, 0, 1, 0);
+  //   glRotated(-rotateXZDeg, 0, 1, 0);
+  // }
 }
 
 #endif
