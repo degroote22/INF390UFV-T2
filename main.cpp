@@ -5,33 +5,47 @@
 #include <math.h>
 #include "helpers.cpp"
 #include "parser.cpp"
+#include "handler.cpp"
 
-Parser planeParser;
+// Viewer-9.38595
+// 12.3535
+// 18.622
+// Looking-0.357373
+// 0.461923
+// -4.96577
+
+#define WALKING_FACTOR 10
+#define VIEWER_SCALE 5.0
 
 int width = 800;
 int height = 800;
-GLdouble viewer[] = {0.0, 0.0, 5.0};
-GLdouble lookingVector[] = {0.0, 0.0, -5.0};
+GLdouble viewerInit[] = {-9.38595, 12.3535, 18.622};
+GLdouble viewer[] = {-9.38595, 12.3535, 18.622};
+GLdouble lookingVector[] = {-0.357373, 0.461923, -4.96577};
 GLint lastX = 0.0;
 GLint lastY = 0.0;
 bool hasMovedMouse = false;
+bool thirdPersonCamera = false;
+
+Handler planeHandler;
+Handler cityHandler;
 
 void initScene(void)
 {
   GLfloat mat_ambient[] = {0.5, 0.5, 0.5, 1.0};
   GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
   GLfloat mat_shininess[] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};
+  GLfloat light_position[] = {0.0, 15.0, 0.0, 0.0};
   GLfloat white_light[] = {1.0, 1.0, 1.0, 0.0};
   GLfloat red_light[] = {1.0, 0.0, 0.0, 0.0};
 
   glClearColor(1.0, 1.0, 1.0, 1.0);
 
-  //glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-  //glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-  //glLightfv(GL_LIGHT0, GL_AMBIENT, mat_ambient);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, mat_ambient);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
   glLightfv(GL_LIGHT0, GL_SPECULAR, mat_shininess);
 
@@ -62,10 +76,15 @@ void drawTestBalls()
   glutSolidSphere(0.3, 50, 16);
   glTranslated(0.0, 0.0, -1.0);
 
-  glTranslated(viewer[0], viewer[1] - 1, viewer[2]);
-  glColor3f(0.5, 0.5, 1.0);
-  glutSolidSphere(0.5, 50, 16);
-  glTranslated(-viewer[0], -viewer[1] + 1, -viewer[2]);
+  glTranslated(0.0, 15.0, 0.0);
+  glColor3f(0.0, 0, 0);
+  glutSolidSphere(2, 50, 16);
+  glTranslated(0.0, -15.0, 0.0);
+
+  // glTranslated(viewer[0], viewer[1] - 1, viewer[2]);
+  // glColor3f(0.5, 0.5, 1.0);
+  // glutSolidSphere(0.5, 50, 16);
+  // glTranslated(-viewer[0], -viewer[1] + 1, -viewer[2]);
 }
 
 void drawTestLine()
@@ -81,13 +100,30 @@ void display(void)
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
+  GLdouble v[3] = {0, 0, 0};
+  if (thirdPersonCamera)
+  {
+    v[0] = viewer[0];
+    v[1] = viewer[1] + 5;
+    v[2] = viewer[2] + 15;
+  }
+  else
+  {
+    v[0] = viewer[0];
+    v[1] = viewer[1];
+    v[2] = viewer[2];
+  }
   gluLookAt(
-      viewer[0], viewer[1], viewer[2],
-      viewer[0] + lookingVector[0], viewer[1] + lookingVector[1], viewer[2] + lookingVector[2],
+      v[0], v[1], v[2],
+      v[0] + lookingVector[0], v[1] + lookingVector[1], v[2] + lookingVector[2],
       0.0, 1.0, 0.0);
 
   drawTestBalls();
   drawTestLine();
+
+  planeHandler.setTranslate(viewer[0] - viewerInit[0], viewer[1] - viewerInit[1], viewer[2] - viewerInit[2]);
+  planeHandler.render();
+  cityHandler.render();
 
   glFlush();
 }
@@ -99,7 +135,7 @@ void myReshape(GLsizei w, GLsizei h)
   glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(70.0, 1.0, 0.5, 20.0);
+  gluPerspective(70.0, 1.0, 0.5, 500.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
@@ -140,9 +176,9 @@ void walkFrontway(bool forward)
   if (forward)
     i = 1;
 
-  viewer[0] += i * lookingVector[0] / 10;
-  viewer[1] += i * lookingVector[1] / 10;
-  viewer[2] += i * lookingVector[2] / 10;
+  viewer[0] += i * lookingVector[0] / WALKING_FACTOR;
+  viewer[1] += i * lookingVector[1] / WALKING_FACTOR;
+  viewer[2] += i * lookingVector[2] / WALKING_FACTOR;
 }
 
 void walkSideways(bool right)
@@ -158,17 +194,17 @@ void walkSideways(bool right)
 
   rotateXZ(90, side);
 
-  viewer[0] += i * side[0] / 10;
-  viewer[1] += i * side[1] / 10;
-  viewer[2] += i * side[2] / 10;
+  viewer[0] += i * side[0] / WALKING_FACTOR;
+  viewer[1] += i * side[1] / WALKING_FACTOR;
+  viewer[2] += i * side[2] / WALKING_FACTOR;
 }
 
 void hover(bool up)
 {
   if (up)
-    viewer[1] += 0.5;
+    viewer[1] += VIEWER_SCALE / WALKING_FACTOR;
   else
-    viewer[1] -= 0.5;
+    viewer[1] -= VIEWER_SCALE / WALKING_FACTOR;
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -176,6 +212,15 @@ void keyboard(unsigned char key, int x, int y)
   // std::ostringstream s;
   // s << key << "\n";
   // Logger::log(s.str());
+
+  // Logger::log("Viewer");
+  // Logger::logDouble(viewer[0]);
+  // Logger::logDouble(viewer[1]);
+  // Logger::logDouble(viewer[2]);
+  // Logger::log("Looking");
+  // Logger::logDouble(lookingVector[0]);
+  // Logger::logDouble(lookingVector[1]);
+  // Logger::logDouble(lookingVector[2]);
 
   switch (key)
   {
@@ -196,6 +241,9 @@ void keyboard(unsigned char key, int x, int y)
     break;
   case 'e':
     hover(false);
+    break;
+  case 'c':
+    thirdPersonCamera = !thirdPersonCamera;
     break;
 
   default:
@@ -227,7 +275,13 @@ void SpecialInput(int key, int x, int y)
 int main(int argc, char **argv)
 {
   Logger::clear();
-  planeParser.parseFile("test.obj");
+
+  planeHandler.load("AVMT300.obj");
+  planeHandler.setRotate(-90);
+
+  cityHandler.load("mount.blend1.obj");
+  cityHandler.setScale(10);
+  cityHandler.setTranslate(0, -5, 0);
 
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);

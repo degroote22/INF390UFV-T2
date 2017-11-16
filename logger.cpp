@@ -28,6 +28,13 @@ public:
     s << x << "\n";
     log(s.str());
   }
+
+  static void logDouble(double x)
+  {
+    std::ostringstream s;
+    s << x << "\n";
+    log(s.str());
+  }
 };
 
 #endif
