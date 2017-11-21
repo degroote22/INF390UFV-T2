@@ -54,6 +54,8 @@ void Handler::load(std::string filename)
 void Handler::render()
 {
   glPushMatrix();
+  glColor3f(0.0, 0.0, 0.0);
+
   glTranslated(translate[0], translate[1], translate[2]);
   glRotated(rotateXZDeg, 0, 1, 0);
   glRotated(rotateYZDeg, 1, 0, 0);
@@ -71,28 +73,12 @@ void Handler::render()
       GLdouble y = vertices[verticeIndex * 3 + 1];
       GLdouble z = vertices[verticeIndex * 3 + 2];
 
-      int c = verticeIndex % 100;
-      glColor3f((double)c / 100, 1 - (double)c / 100, cos((double)c / 100));
-
       glVertex3f(x, y, z);
     }
 
     glEnd();
   }
   glPopMatrix();
-  // if (scale != 1)
-  // {
-  //   glScalef(1 / scale, 1 / scale, 1 / scale);
-  // }
-  // if (changeTranslate)
-  // {
-  //   glTranslated(-translate[0], -translate[1], -translate[2]);
-  // }
-  // if (rotateDeg != 0)
-  // {
-  //   glRotated(-rotateXZDeg, 0, 1, 0);
-  //   glRotated(-rotateXZDeg, 0, 1, 0);
-  // }
 }
 
 #endif

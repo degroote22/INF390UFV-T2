@@ -3,6 +3,10 @@
     "iosfwd": "cpp",
     "fstream": "cpp",
     "chrono": "cpp",
-    "ratio": "cpp"
+    "ratio": "cpp",
+    "cstdint": "cpp",
+    "ctime": "cpp",
+    "limits": "cpp",
+    "type_traits": "cpp"
   }
 }

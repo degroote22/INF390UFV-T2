@@ -9,125 +9,95 @@
 #include <chrono>
 
 #define WALKING_FACTOR 10
-#define VIEWER_SCALE 5.0
+#define VIEWER_SCALE 33.5
 
 Handler playerHandler;
-// Handler planeHandler;
+
 Handler planeHandler;
 Handler planeHandler2;
 Handler missileHandler;
-Handler cityHandler;
+Handler roadHandler;
+Handler buildingHandler;
 
 int width = 800;
 int height = 800;
 
-GLdouble planeInit[] = {-1, 9.5, -28.5};
+const GLdouble playerInit[] = {-1, 9.5, -28.5};
+const GLdouble lookingVectorInit[] = {0, 0.0, VIEWER_SCALE};
 
 GLdouble viewer[] = {0, 0, 0};
-const GLdouble lookingVectorInit[] = {0, 0.0, 33.5};
-GLdouble lookingVector[] = {0, 0.0, 33.5};
+GLdouble lookingVector[] = {lookingVectorInit[0], lookingVectorInit[1], lookingVectorInit[2]};
 GLint lastX = 0.0;
 GLint lastY = 0.0;
 bool hasMovedMouse = false;
 bool thirdPersonCamera = false;
-
 double playerXZRotation = 0;
-void rotatePlayerXZ(double angle)
-{
-  playerXZRotation += angle;
-}
-
 double playerYZRotation = 0;
-void rotatePlayerYZ(double angle)
-{
-  // Esta rotação não está funcionando direito
-  // no momento.
-
-  playerYZRotation += angle;
-}
 
 void initScene(void)
 {
-  GLfloat mat_ambient[] = {0.5, 0.5, 0.5, 1.0};
-  GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
+
+  GLfloat mat_ambient[] = {0.0, 0.0, 1.0, 1.0};
+  GLfloat mat_diffuse[] = {1.0, 0.0, 0.0, 1.0};
+  GLfloat mat_specular[] = {0.0, 1.0, 1.0, 1.0};
   GLfloat mat_shininess[] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat light_position[] = {0.0, 50.0, 0.0, 0.0};
-  GLfloat white_light[] = {1.0, 1.0, 1.0, 0.0};
-  GLfloat red_light[] = {1.0, 0.0, 0.0, 0.0};
+  GLfloat light_position[] = {0.0, 1.0, 0.0, 1.0};
+  GLfloat white_light[] = {1.0, 1.0, 1.0, 1.0};
 
   glClearColor(1.0, 1.0, 1.0, 1.0);
-
-  // glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-  glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-  glLightfv(GL_LIGHT0, GL_AMBIENT, mat_ambient);
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, red_light);
-  // glLightfv(GL_LIGHT0, GL_SPECULAR, mat_shininess);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, white_light);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
+
+  // glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.2f);
+  glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.1f);
+  glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.009f);
 
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
-  glEnable(GL_COLOR_MATERIAL);
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
-}
-
-void drawTestLine()
-{
-  GLdouble v[3] = {0, 0, 0};
-
-  v[0] = viewer[0];
-  v[1] = viewer[1];
-  v[2] = viewer[2];
-
-  glPushMatrix();
-  glTranslated(v[0] + lookingVector[0], v[1] + lookingVector[1], v[2] + lookingVector[2]);
-  glColor3f(0.0, 0, 0);
-  glutSolidSphere(0.5, 50, 16);
-  glPopMatrix();
+  glShadeModel(GL_SMOOTH);
 }
 
 void display(void)
 {
-  lookingVector[0] = lookingVectorInit[0];
-  lookingVector[1] = lookingVectorInit[1];
-  lookingVector[2] = lookingVectorInit[2];
-  rotateYZ(playerYZRotation, lookingVector);
-  rotateXZ(playerXZRotation, lookingVector);
-
-  // Logger::log("Viewer");
-  // Logger::logDouble(viewer[0]);
-  // Logger::logDouble(viewer[1]);
-  // Logger::logDouble(viewer[2]);
-  // Logger::log("Looking");
-  // Logger::logDouble(lookingVector[0]);
-  // Logger::logDouble(lookingVector[1]);
-  // Logger::logDouble(lookingVector[2]);
-
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
-
-  GLdouble pi[3] = {0, 0, 0};
+  GLdouble playerDisplacement[3] = {0, 0, 0};
   if (thirdPersonCamera)
   {
-    pi[0] = planeInit[0];
-    pi[1] = planeInit[1];
-    pi[2] = planeInit[2];
+    playerDisplacement[0] = playerInit[0];
+    playerDisplacement[1] = playerInit[1];
+    playerDisplacement[2] = playerInit[2];
   }
   else
   {
-    pi[0] = planeInit[0];
-    pi[1] = planeInit[1] - 5;
-    pi[2] = planeInit[2] + 40;
+    playerDisplacement[0] = playerInit[0];
+    playerDisplacement[1] = playerInit[1] - 5;
+    playerDisplacement[2] = playerInit[2] + 40;
   }
-  rotateXZ(playerXZRotation, pi);
+  rotateXZ(playerXZRotation, playerDisplacement);
+
+  lookingVector[0] = lookingVectorInit[0];
+  lookingVector[1] = lookingVectorInit[1];
+  lookingVector[2] = lookingVectorInit[2];
+  rotateXZ(playerXZRotation, lookingVector);
+  rotateYZ(playerYZRotation, lookingVector);
 
   gluLookAt(
-      viewer[0] + pi[0], viewer[1] + pi[1], viewer[2] + pi[2],
+      viewer[0] + playerDisplacement[0], viewer[1] + playerDisplacement[1], viewer[2] + playerDisplacement[2],
       viewer[0] + lookingVector[0], viewer[1] + lookingVector[1], viewer[2] + lookingVector[2],
       0.0, 1.0, 0.0);
 
-  drawTestLine();
+  initScene();
+  // drawTestLine();
 
   if (thirdPersonCamera)
   {
@@ -138,9 +108,19 @@ void display(void)
   }
 
   missileHandler.render();
-  cityHandler.render();
   planeHandler.render();
   planeHandler2.render();
+
+  for (int i = 0; i < 10; i++)
+  {
+    roadHandler.setTranslate(0, 0, 68 * i);
+    roadHandler.render();
+  }
+  for (int i = 0; i < 10; i++)
+  {
+    buildingHandler.setTranslate(75, -5, 50 * i);
+    buildingHandler.render();
+  }
 
   glutSwapBuffers();
 }
@@ -155,6 +135,16 @@ void myReshape(GLsizei w, GLsizei h)
   gluPerspective(70.0, (double)w / h, 2.0, 500.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+}
+
+void rotatePlayerXZ(double angle)
+{
+  playerXZRotation += angle;
+}
+
+void rotatePlayerYZ(double angle)
+{
+  playerYZRotation += angle;
 }
 
 // Usa-se um "hack" para poder mexer o mouse sem mudar a visão
@@ -290,32 +280,42 @@ void SpecialInput(int key, int x, int y)
   display();
 }
 
-int main(int argc, char **argv)
+void loadObjects()
 {
-  Logger::clear();
-
   playerHandler.load("plane/FA38_Airborne.obj");
   playerHandler.setScale(0.0005);
 
   planeHandler.load("plane2/TAL16OBJ.obj");
   planeHandler.setRotateYZ(-90);
-  planeHandler.setRotateXZ(-90);
   planeHandler.setScale(10);
-  planeHandler.setTranslate(75, 5, 0);
+  planeHandler.setTranslate(-25, 0, -50);
 
   planeHandler2.load("plane3/AN-24PB_obj.obj");
   planeHandler2.setRotateYZ(-90);
+  planeHandler2.setRotateXZ(90);
+  planeHandler2.setTranslate(-25, 0, 0);
 
   missileHandler.load("missile/AVMT300.obj");
   missileHandler.setScale(0.5);
-  missileHandler.setTranslate(-25, 0, 0);
+  missileHandler.setRotateXZ(90);
+  missileHandler.setTranslate(-25, 0, 50);
 
-  // cityHandler.load("town/wild town/wild town.obj");
-  cityHandler.setScale(0.3);
-  cityHandler.setTranslate(0, -5, 0);
+  roadHandler.load("road/roadV2.obj");
+  roadHandler.setScale(20);
+
+  buildingHandler.load("building.obj");
+  buildingHandler.setScale(0.2);
+}
+
+int main(int argc, char **argv)
+{
+  Logger::clear();
+  loadObjects();
 
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE);
+  glEnable(GL_MULTISAMPLE);
+
   glutInitWindowSize(width, height);
   glutCreateWindow("78390");
   glutInitWindowPosition(0, 0);
