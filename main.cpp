@@ -294,7 +294,7 @@ int main(int argc, char **argv)
 
   missileHandler.load("missile/AVMT300.obj");
 
-  cityHandler.load("town/wild town/wild town.obj");
+  // cityHandler.load("town/wild town/wild town.obj");
   cityHandler.setScale(0.3);
   cityHandler.setTranslate(0, -5, 0);
 
