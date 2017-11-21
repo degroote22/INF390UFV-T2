@@ -8,15 +8,12 @@
 #include "handler.cpp"
 #include <chrono>
 
-// Viewer-9.38595
-// 12.3535
-// 18.622
-// Looking-0.357373
-// 0.461923
-// -4.96577
-
 #define WALKING_FACTOR 10
 #define VIEWER_SCALE 5.0
+
+Handler planeHandler;
+Handler missileHandler;
+Handler cityHandler;
 
 int width = 800;
 int height = 800;
@@ -24,8 +21,8 @@ int height = 800;
 GLdouble planeInit[] = {-1, 9.5, -28.5};
 
 GLdouble viewer[] = {0, 0, 0};
-// GLdouble lookingVector[] = {0, 0, 5};
-GLdouble lookingVector[] = {1, -9.5, 33.5};
+const GLdouble lookingVectorInit[] = {0, 0.0, 33.5};
+GLdouble lookingVector[] = {0, 0.0, 33.5};
 GLint lastX = 0.0;
 GLint lastY = 0.0;
 bool hasMovedMouse = false;
@@ -34,19 +31,17 @@ bool thirdPersonCamera = false;
 double playerXZRotation = 0;
 void rotatePlayerXZ(double angle)
 {
-  rotateXZ(angle, lookingVector);
   playerXZRotation += angle;
 }
 
 double playerYZRotation = 0;
 void rotatePlayerYZ(double angle)
 {
-  rotateYZ(angle, lookingVector);
+  // Esta rotação não está funcionando direito
+  // no momento.
+
   playerYZRotation += angle;
 }
-
-Handler planeHandler;
-Handler cityHandler;
 
 void initScene(void)
 {
@@ -59,13 +54,13 @@ void initScene(void)
 
   glClearColor(1.0, 1.0, 1.0, 1.0);
 
-  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+  // glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
   glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
 
   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
   glLightfv(GL_LIGHT0, GL_AMBIENT, mat_ambient);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, red_light);
-  glLightfv(GL_LIGHT0, GL_SPECULAR, mat_shininess);
+  // glLightfv(GL_LIGHT0, GL_SPECULAR, mat_shininess);
 
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
@@ -74,52 +69,13 @@ void initScene(void)
   glEnable(GL_DEPTH_TEST);
 }
 
-void drawTestBalls()
-{
-  glColor3f(0, 0, 0.0);
-  glutSolidSphere(0.5, 50, 16);
-
-  glTranslated(1.0, 0.0, 0.0);
-  glColor3f(1.0, 0, 0);
-  glutSolidSphere(0.3, 50, 16);
-  glTranslated(-1.0, 0.0, 0.0);
-
-  glTranslated(0.0, 1.0, 0.0);
-  glColor3f(0, 1.0, 0);
-  glutSolidSphere(0.3, 50, 16);
-  glTranslated(0.0, -1.0, 0.0);
-
-  glTranslated(0.0, 0.0, 1.0);
-  glColor3f(0, 0, 1.0);
-  glutSolidSphere(0.3, 50, 16);
-  glTranslated(0.0, 0.0, -1.0);
-
-  glTranslated(0.0, 15.0, 0.0);
-  glColor3f(0.0, 0, 0);
-  glutSolidSphere(2, 50, 16);
-  glTranslated(0.0, -15.0, 0.0);
-
-  // glTranslated(viewer[0], viewer[1] - 1, viewer[2]);
-  // glColor3f(0.5, 0.5, 1.0);
-  // glutSolidSphere(0.5, 50, 16);
-  // glTranslated(-viewer[0], -viewer[1] + 1, -viewer[2]);
-}
-
 void drawTestLine()
 {
   GLdouble v[3] = {0, 0, 0};
-  if (thirdPersonCamera)
-  {
-    v[0] = viewer[0];
-    v[1] = viewer[1] + 5;
-    v[2] = viewer[2] + 15;
-  }
-  else
-  {
-    v[0] = viewer[0];
-    v[1] = viewer[1];
-    v[2] = viewer[2];
-  }
+
+  v[0] = viewer[0];
+  v[1] = viewer[1];
+  v[2] = viewer[2];
 
   glPushMatrix();
   glTranslated(v[0] + lookingVector[0], v[1] + lookingVector[1], v[2] + lookingVector[2]);
@@ -130,6 +86,12 @@ void drawTestLine()
 
 void display(void)
 {
+  lookingVector[0] = lookingVectorInit[0];
+  lookingVector[1] = lookingVectorInit[1];
+  lookingVector[2] = lookingVectorInit[2];
+  rotateYZ(playerYZRotation, lookingVector);
+  rotateXZ(playerXZRotation, lookingVector);
+
   // Logger::log("Viewer");
   // Logger::logDouble(viewer[0]);
   // Logger::logDouble(viewer[1]);
@@ -141,40 +103,38 @@ void display(void)
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
-  GLdouble v[3] = {0, 0, 0};
+
+  GLdouble pi[3] = {0, 0, 0};
   if (thirdPersonCamera)
   {
-    v[0] = viewer[0];
-    v[1] = viewer[1] + 5;
-    v[2] = viewer[2] + 15;
+    pi[0] = planeInit[0];
+    pi[1] = planeInit[1];
+    pi[2] = planeInit[2];
   }
   else
   {
-    v[0] = viewer[0];
-    v[1] = viewer[1];
-    v[2] = viewer[2];
+    pi[0] = planeInit[0];
+    pi[1] = planeInit[1] - 5;
+    pi[2] = planeInit[2] + 40;
   }
-
-  GLdouble pi[3] = {0, 0, 0};
-  pi[0] = planeInit[0];
-  pi[1] = planeInit[1];
-  pi[2] = planeInit[2];
-
   rotateXZ(playerXZRotation, pi);
 
   gluLookAt(
-      v[0] + pi[0], v[1] + pi[1], v[2] + pi[2],
-      v[0] + lookingVector[0], v[1] + lookingVector[1], v[2] + lookingVector[2],
+      viewer[0] + pi[0], viewer[1] + pi[1], viewer[2] + pi[2],
+      viewer[0] + lookingVector[0], viewer[1] + lookingVector[1], viewer[2] + lookingVector[2],
       0.0, 1.0, 0.0);
 
-  // drawTestBalls();
   drawTestLine();
 
-  planeHandler.setTranslate(viewer[0], viewer[1], viewer[2]);
-  planeHandler.setRotateXZ(-playerXZRotation);
-  planeHandler.setRotateYZ(-playerYZRotation);
+  if (thirdPersonCamera)
+  {
+    planeHandler.setTranslate(viewer[0], viewer[1], viewer[2]);
+    planeHandler.setRotateXZ(-playerXZRotation);
+    planeHandler.setRotateYZ(-playerYZRotation);
+    planeHandler.render();
+  }
 
-  planeHandler.render();
+  missileHandler.render();
   cityHandler.render();
 
   glutSwapBuffers();
@@ -187,7 +147,7 @@ void myReshape(GLsizei w, GLsizei h)
   glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(70.0, 1.0, 2.0, 500000.0);
+  gluPerspective(70.0, 1.0, 2.0, 500.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
@@ -204,19 +164,17 @@ std::chrono::high_resolution_clock::time_point lastTime = std::chrono::high_reso
 
 void mouseMove(GLint x, GLint y)
 {
-  // long double sysTime = time(0);
-  // long double sysTimeMS = sysTime * 1000;
+  // Como não há um game loop na implementação
+  // e a arquitetura é baseada em eventos,
+  // é feito um throttle do movimento do mouse
+  // para que a taxa de quadros fique aceitável.
+
   std::chrono::high_resolution_clock::time_point time = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> time_span = time - lastTime;
-
-  // Logger::logDouble(sysTimeMS - lastTime);
-  // std::ostringstream s;
-  // s << time_span.count() << "\n";
-  // Logger::log(s.str());
   if (time_span.count() < 35)
     return;
   lastTime = time;
-  // lastTime = sysTimeMS;
+
   // Parte do Hack do mouse
   if (!hasMovedMouse)
   {
@@ -231,8 +189,6 @@ void mouseMove(GLint x, GLint y)
 
   rotatePlayerXZ(dx * 30);
   rotatePlayerYZ(dy * -30);
-  // rotateYZ(dy * -30, lookingVector);
-  // rotateXZ(dx * 30, lookingVector);
 
   lastX = x;
   lastY = y;
@@ -264,7 +220,7 @@ void walkSideways(bool right)
   rotateXZ(90, side);
 
   viewer[0] += i * side[0] / WALKING_FACTOR;
-  viewer[1] += i * side[1] / WALKING_FACTOR;
+  // viewer[1] += i * side[1] / WALKING_FACTOR;
   viewer[2] += i * side[2] / WALKING_FACTOR;
 }
 
@@ -278,9 +234,6 @@ void hover(bool up)
 
 void keyboard(unsigned char key, int x, int y)
 {
-  // std::ostringstream s;
-  // s << key << "\n";
-  // Logger::log(s.str());
 
   switch (key)
   {
@@ -336,15 +289,17 @@ int main(int argc, char **argv)
 {
   Logger::clear();
 
-  planeHandler.load("FA38_Airborne.obj");
+  planeHandler.load("plane/FA38_Airborne.obj");
   planeHandler.setScale(0.0005);
 
-  cityHandler.load("mount.blend1.obj");
-  cityHandler.setScale(3);
+  missileHandler.load("missile/AVMT300.obj");
+
+  cityHandler.load("town/wild town/wild town.obj");
+  cityHandler.setScale(0.3);
   cityHandler.setTranslate(0, -5, 0);
 
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
   glutInitWindowSize(width, height);
   glutCreateWindow("78390");
   glutInitWindowPosition(0, 0);
