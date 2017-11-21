@@ -51,11 +51,10 @@ void setLights(void)
 
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
-
   glDepthFunc(GL_LESS);
   glEnable(GL_DEPTH_TEST);
-  glShadeModel(GL_SMOOTH);
-  glEnable(GL_COLOR_MATERIAL);
+  glShadeModel(GL_FLAT);
+  // glEnable(GL_COLOR_MATERIAL);
 }
 
 void renderObjects()
@@ -220,7 +219,7 @@ void loadObjects()
   roadHandler.load("road/roadV2.obj");
   roadHandler.setScale(20);
 
-  buildingHandler.load("building.obj");
+  buildingHandler.load("building/building.obj");
   buildingHandler.setScale(0.2);
 }
 
