@@ -11,7 +11,10 @@
 #define WALKING_FACTOR 10
 #define VIEWER_SCALE 5.0
 
+Handler playerHandler;
+// Handler planeHandler;
 Handler planeHandler;
+Handler planeHandler2;
 Handler missileHandler;
 Handler cityHandler;
 
@@ -128,14 +131,16 @@ void display(void)
 
   if (thirdPersonCamera)
   {
-    planeHandler.setTranslate(viewer[0], viewer[1], viewer[2]);
-    planeHandler.setRotateXZ(-playerXZRotation);
-    planeHandler.setRotateYZ(-playerYZRotation);
-    planeHandler.render();
+    playerHandler.setTranslate(viewer[0], viewer[1], viewer[2]);
+    playerHandler.setRotateXZ(-playerXZRotation);
+    playerHandler.setRotateYZ(-playerYZRotation);
+    playerHandler.render();
   }
 
   missileHandler.render();
   cityHandler.render();
+  planeHandler.render();
+  planeHandler2.render();
 
   glutSwapBuffers();
 }
@@ -147,7 +152,7 @@ void myReshape(GLsizei w, GLsizei h)
   glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(70.0, 1.0, 2.0, 500.0);
+  gluPerspective(70.0, (double)w / h, 2.0, 500.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
@@ -171,7 +176,7 @@ void mouseMove(GLint x, GLint y)
 
   std::chrono::high_resolution_clock::time_point time = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> time_span = time - lastTime;
-  if (time_span.count() < 35)
+  if (time_span.count() < 70)
     return;
   lastTime = time;
 
@@ -289,10 +294,21 @@ int main(int argc, char **argv)
 {
   Logger::clear();
 
-  planeHandler.load("plane/FA38_Airborne.obj");
-  planeHandler.setScale(0.0005);
+  playerHandler.load("plane/FA38_Airborne.obj");
+  playerHandler.setScale(0.0005);
+
+  planeHandler.load("plane2/TAL16OBJ.obj");
+  planeHandler.setRotateYZ(-90);
+  planeHandler.setRotateXZ(-90);
+  planeHandler.setScale(10);
+  planeHandler.setTranslate(75, 5, 0);
+
+  planeHandler2.load("plane3/AN-24PB_obj.obj");
+  planeHandler2.setRotateYZ(-90);
 
   missileHandler.load("missile/AVMT300.obj");
+  missileHandler.setScale(0.5);
+  missileHandler.setTranslate(-25, 0, 0);
 
   // cityHandler.load("town/wild town/wild town.obj");
   cityHandler.setScale(0.3);
