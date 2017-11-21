@@ -1,3 +1,6 @@
+#ifndef HELPERS
+#define HELPERS
+
 #define PI 3.14159265
 
 double degToRad(double deg)
@@ -6,7 +9,7 @@ double degToRad(double deg)
   return deg * halfC;
 }
 
-void rotateYZ(double degree, GLdouble vec[3])
+void rotateYZVec3(double degree, GLdouble vec[3])
 {
   GLdouble y = vec[1];
   GLdouble z = vec[2];
@@ -21,7 +24,7 @@ void rotateYZ(double degree, GLdouble vec[3])
   vec[2] = nz;
 }
 
-void rotateXZ(double degree, GLdouble vec[3])
+void rotateXZVec3(double degree, GLdouble vec[3])
 {
   GLdouble x = vec[0];
   GLdouble z = vec[2];
@@ -35,3 +38,5 @@ void rotateXZ(double degree, GLdouble vec[3])
   vec[0] = nx;
   vec[2] = nz;
 }
+
+#endif

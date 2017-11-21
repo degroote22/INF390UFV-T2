@@ -213,6 +213,7 @@ void Parser::parseFaceLine(const std::string str)
       FacePoint fp0;
       fp0.vertice = x;
       fp0.texture = texture;
+      fp0.normal = 0;
       faces[facesRead].push_back(fp0);
       while (true)
       {
@@ -231,6 +232,7 @@ void Parser::parseFaceLine(const std::string str)
           FacePoint fp;
           fp.vertice = x;
           fp.texture = texture;
+          fp.normal = 0;
           faces[facesRead].push_back(fp);
         }
         catch (std::invalid_argument err)
@@ -245,6 +247,7 @@ void Parser::parseFaceLine(const std::string str)
   {
     FacePoint fp0;
     fp0.vertice = x;
+    fp0.normal = 0;
     faces[facesRead].push_back(fp0);
     while (true)
     {
@@ -254,6 +257,7 @@ void Parser::parseFaceLine(const std::string str)
         cursor += offset;
         FacePoint fp;
         fp.vertice = x;
+        fp.normal = 0;
         faces[facesRead].push_back(fp);
       }
       catch (std::invalid_argument err)

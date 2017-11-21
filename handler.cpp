@@ -34,6 +34,7 @@ private:
   int facesN;
   std::vector<FacePoint> *faces;
   GLdouble *vertices;
+  GLdouble *normals;
   Parser parser;
   double scale = 1;
   bool changeTranslate = false;
@@ -41,14 +42,17 @@ private:
   bool changeRotate = false;
   double rotateXZDeg = 0;
   double rotateYZDeg = 0;
+  std::string file;
 };
 
 void Handler::load(std::string filename)
 {
+  file = filename;
   parser.parseFile(filename);
   facesN = parser.getNumFaces();
   faces = parser.getFaces();
   vertices = parser.getVertices();
+  normals = parser.getNormals();
 }
 
 void Handler::render()
@@ -72,6 +76,15 @@ void Handler::render()
       GLdouble x = vertices[verticeIndex * 3];
       GLdouble y = vertices[verticeIndex * 3 + 1];
       GLdouble z = vertices[verticeIndex * 3 + 2];
+
+      int normalIndex = (*it).normal - 1;
+      if (normalIndex != -1)
+      {
+        GLdouble nx = normals[normalIndex * 3];
+        GLdouble ny = normals[normalIndex * 3 + 1];
+        GLdouble nz = normals[normalIndex * 3 + 2];
+        glNormal3f(nx, ny, nz);
+      }
 
       glVertex3f(x, y, z);
     }
