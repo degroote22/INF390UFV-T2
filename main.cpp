@@ -6,7 +6,10 @@
 #include "helpers.cpp"
 #include "handler.cpp"
 #include "player.cpp"
+#include "textureLoader.cpp"
 #include <chrono>
+
+GLuint textures[2];
 
 Player player;
 
@@ -21,21 +24,21 @@ int height = 800;
 
 bool thirdPersonCamera = false;
 
-void initScene(void)
+void setLights(void)
 {
 
-  GLfloat mat_ambient[] = {0.0, 0.0, 1.0, 1.0};
-  GLfloat mat_diffuse[] = {1.0, 0.0, 0.0, 1.0};
-  GLfloat mat_specular[] = {0.0, 1.0, 1.0, 1.0};
+  GLfloat mat_ambient[] = {0.0, 0.0, 0.0, 1.0};
+  GLfloat mat_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat mat_specular[] = {0.33, 0.33, 0.33, 1.0};
   GLfloat mat_shininess[] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat light_position[] = {0.0, 1.0, 0.0, 1.0};
+  GLfloat light_position[] = {0.0, 1.0, 0.0, 0.0};
   GLfloat white_light[] = {1.0, 1.0, 1.0, 1.0};
 
   glClearColor(1.0, 1.0, 1.0, 1.0);
   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+  // glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
   glLightfv(GL_LIGHT0, GL_AMBIENT, white_light);
@@ -44,17 +47,63 @@ void initScene(void)
 
   // glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.2f);
   glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.1f);
-  glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.009f);
+  // glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.009f);
 
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
-  glDepthFunc(GL_LEQUAL);
+
+  glDepthFunc(GL_LESS);
   glEnable(GL_DEPTH_TEST);
   glShadeModel(GL_SMOOTH);
+  glEnable(GL_COLOR_MATERIAL);
+}
+
+void renderObjects()
+{
+
+  if (thirdPersonCamera)
+  {
+    player.render();
+  }
+
+  missileHandler.render();
+  planeHandler.render();
+  planeHandler2.render();
+
+  for (int i = 0; i < 10; i++)
+  {
+    roadHandler.setTranslate(0, 2, 68 * i);
+    roadHandler.render();
+  }
+  for (int i = 0; i < 10; i++)
+  {
+    buildingHandler.setTranslate(75, -5, 50 * i);
+    buildingHandler.render();
+  }
+}
+
+void renderGrass(void)
+{
+  glEnable(GL_TEXTURE_2D);
+
+  glBindTexture(GL_TEXTURE_2D, textures[0]);
+  glBegin(GL_QUADS);
+  glTexCoord2f(0.0, 0.0);
+  glVertex3f(-1000, 0, -1000);
+  glTexCoord2f(100.0, 0.0);
+  glVertex3f(-1000, 0.0, 1000);
+  glTexCoord2f(100.0, 100.0);
+  glVertex3f(1000, 0.0, 1000);
+  glTexCoord2f(0.0, 100.0);
+  glVertex3f(1000, 0.0, -1000);
+  glEnd();
+
+  glDisable(GL_TEXTURE_2D);
 }
 
 void display(void)
 {
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
 
@@ -69,27 +118,20 @@ void display(void)
       lookingPosition[0], lookingPosition[1], lookingPosition[2],
       0.0, 1.0, 0.0);
 
-  initScene();
+  setLights();
+  glDisable(GL_TEXTURE_2D);
 
-  if (thirdPersonCamera)
-  {
-    player.render();
-  }
+  renderObjects();
 
-  missileHandler.render();
-  planeHandler.render();
-  planeHandler2.render();
+  renderGrass();
 
-  for (int i = 0; i < 10; i++)
-  {
-    roadHandler.setTranslate(0, 0, 68 * i);
-    roadHandler.render();
-  }
-  for (int i = 0; i < 10; i++)
-  {
-    buildingHandler.setTranslate(75, -5, 50 * i);
-    buildingHandler.render();
-  }
+  glPushMatrix();
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, textures[1]);
+  glTranslatef(viewer[0], viewer[1], viewer[2]);
+  glutSolidSphere(450, 50, 30);
+  glDisable(GL_TEXTURE_2D);
+  glPopMatrix();
 
   glutSwapBuffers();
 }
@@ -163,7 +205,7 @@ void loadObjects()
   planeHandler.load("plane2/TAL16OBJ.obj");
   planeHandler.setRotateYZ(-90);
   planeHandler.setScale(10);
-  planeHandler.setTranslate(-25, 0, -50);
+  planeHandler.setTranslate(-25, 5, -70);
 
   planeHandler2.load("plane3/AN-24PB_obj.obj");
   planeHandler2.setRotateYZ(-90);
@@ -209,6 +251,8 @@ int main(int argc, char **argv)
   glutInitWindowSize(width, height);
   glutCreateWindow("78390");
   glutInitWindowPosition(0, 0);
+
+  loadTextures(textures);
 
   glutSpecialFunc(SpecialInput);
   glutKeyboardFunc(keyboard);

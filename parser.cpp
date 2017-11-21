@@ -286,8 +286,8 @@ void Parser::parseFaceLine(const std::string str)
         cursor = cursor + offset + 2;
 
         normal = std::stoi(&str[cursor], &offset);
-        cursor += offset;
 
+        cursor += offset;
         FacePoint fp;
         fp.vertice = x;
         fp.normal = normal;

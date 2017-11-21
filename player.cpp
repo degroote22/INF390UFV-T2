@@ -199,8 +199,8 @@ void Player::walkFrontway(bool forward)
   lookingVector[0] = lookingVectorInit[0];
   lookingVector[1] = lookingVectorInit[1];
   lookingVector[2] = lookingVectorInit[2];
-  rotateXZVec3(xzRotation, lookingVector);
   rotateYZVec3(yzRotation, lookingVector);
+  rotateXZVec3(xzRotation, lookingVector);
 
   int i = -1;
   if (forward)
