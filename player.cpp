@@ -23,11 +23,13 @@ public:
   void setHeight(int h);
   void getPos(bool thirdPersonCamera, GLdouble *position);
   void getLooking(GLdouble *looking);
+  void getHeadlightFocus(GLdouble *looking);
   void updateLoop();
   void keyDown(unsigned char key);
   void keyUp(unsigned char key);
   void specialUp(int key);
   void specialDown(int key);
+  void reset();
   Player();
 
 private:
@@ -35,7 +37,7 @@ private:
   void walkFrontway(bool forward);
   void rotateXZ(double angle);
   void rotateYZ(double angle);
-  GLdouble pos[3] = {0, 0, 0};
+  GLdouble pos[3] = {0, 0, -150};
   GLdouble vel[3] = {0, 0, 0};
   int width = 0;
   int height = 0;
@@ -59,6 +61,23 @@ private:
   bool upPressed = false;
   bool downPressed = false;
 };
+
+void Player::reset()
+{
+  pos[0] = 0;
+  pos[1] = 0;
+  pos[2] = 0;
+  vel[0] = 0;
+  vel[1] = 0;
+  vel[2] = 0;
+
+  xzRotation = 0;
+  xzAngleBucket = 0;
+  yzRotation = 0;
+  yzAngleBucket = 0;
+  // pos[3] = {0, 0, 0};
+  // vel[3] = {0, 0, 0};
+}
 
 void Player::specialUp(int key)
 {
@@ -129,6 +148,9 @@ void Player::keyDown(unsigned char key)
 {
   switch (key)
   {
+  case 'r':
+    reset();
+    break;
   case 'w':
     wPressed = true;
     break;
@@ -251,6 +273,21 @@ void Player::getLooking(GLdouble *looking)
   looking[0] = pos[0] + lookingVector[0];
   looking[1] = pos[1] + lookingVector[1];
   looking[2] = pos[2] + lookingVector[2];
+}
+
+void Player::getHeadlightFocus(GLdouble *looking)
+{
+  GLdouble lookingVector[3];
+  lookingVector[0] = lookingVectorInit[0];
+  lookingVector[1] = lookingVectorInit[1];
+  lookingVector[2] = lookingVectorInit[2];
+
+  rotateYZVec3(yzRotation, lookingVector);
+  rotateXZVec3(xzRotation, lookingVector);
+
+  looking[0] = lookingVector[0];
+  looking[1] = -lookingVector[1];
+  looking[2] = +lookingVector[2];
 }
 
 void Player::getPos(bool thirdPersonCamera, GLdouble *position)

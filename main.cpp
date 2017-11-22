@@ -22,6 +22,10 @@ Handler buildingHandler;
 int width = 800;
 int height = 800;
 bool thirdPersonCamera = false;
+bool headlightOn = true;
+bool omnilightOn = true;
+bool lightingOn = true;
+bool flatShading = false;
 
 void setLights(void)
 {
@@ -30,8 +34,9 @@ void setLights(void)
   GLfloat mat_diffuse[] = {0.33, 0.33, 0.33, 1.0};
   GLfloat mat_specular[] = {0.13, 0.13, 0.13, 1.0};
   GLfloat mat_shininess[] = {0.33, 0.33, 0.33, 1.0};
-  // GLfloat light_position[] = {35.0, 25.0, 100.0, 1.0};
-  GLfloat white_light[] = {1.0, 1.0, 1.0, 1.0};
+  GLfloat light_position[] = {35.0, 25.0, 100.0, 1.0};
+  GLfloat white_light[] = {0.33, 0.33, 0.33, 1.0};
+  GLfloat red_light[] = {1.0, 0.0, 0.0, 1.0};
 
   glClearColor(1.0, 1.0, 1.0, 1.0);
   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
@@ -44,23 +49,50 @@ void setLights(void)
   glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
   glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
   // glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.000002f);
-  glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.001f);
-  glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0009f);
+  glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.01f);
   glEnable(GL_LIGHT0);
 
   // glLightfv(GL_LIGHT1, GL_POSITION, light_position);
-  glLightfv(GL_LIGHT1, GL_AMBIENT, white_light);
-  glLightfv(GL_LIGHT1, GL_DIFFUSE, white_light);
-  glLightfv(GL_LIGHT1, GL_SPECULAR, white_light);
+  GLfloat exponent[] = {0.1};
+  GLfloat cutoff[] = {60};
+  glLightfv(GL_LIGHT1, GL_AMBIENT, red_light);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE, red_light);
+  glLightfv(GL_LIGHT1, GL_SPECULAR, red_light);
+  glLightfv(GL_LIGHT1, GL_SPOT_EXPONENT, exponent);
+  glLightfv(GL_LIGHT1, GL_SPOT_CUTOFF, cutoff);
   // glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 0.000002f);
   glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.001f);
   glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.0009f);
-  // glEnable(GL_LIGHT1);
+
+  glLightfv(GL_LIGHT2, GL_POSITION, light_position);
+  glLightfv(GL_LIGHT2, GL_AMBIENT, white_light);
+  glLightfv(GL_LIGHT2, GL_DIFFUSE, white_light);
+  glLightfv(GL_LIGHT2, GL_SPECULAR, white_light);
+  glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.000002f);
 
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_LIGHTING);
   glDepthFunc(GL_LESS);
-  glShadeModel(GL_SMOOTH);
+
+  if (omnilightOn)
+    glEnable(GL_LIGHT2);
+  else
+    glDisable(GL_LIGHT2);
+
+  if (headlightOn)
+    glEnable(GL_LIGHT1);
+  else
+    glDisable(GL_LIGHT1);
+
+  if (flatShading)
+    glShadeModel(GL_FLAT);
+  else
+    glShadeModel(GL_SMOOTH);
+
+  if (lightingOn)
+    glEnable(GL_LIGHTING);
+  else
+    glDisable(GL_LIGHTING);
+
   // glEnable(GL_COLOR_MATERIAL);
 }
 
@@ -88,11 +120,6 @@ void renderObjects()
     buildingHandler.setTranslate(55, -5, 50 * i);
     buildingHandler.render();
   }
-
-  // glPushMatrix();
-  // glTranslatef(40, 25, 100);
-  // glutSolidSphere(5, 5, 5);
-  // glPopMatrix();
 }
 
 void renderGrass(void)
@@ -131,6 +158,24 @@ void display(void)
       lookingPosition[0], lookingPosition[1], lookingPosition[2],
       0.0, 1.0, 0.0);
 
+  GLdouble pl[3];
+  player.getPos(false, pl);
+  GLfloat planeLightPos[4] = {
+      (float)pl[0],
+      (float)pl[1],
+      (float)pl[2],
+      1.0};
+
+  GLdouble lp[3];
+  player.getHeadlightFocus(lp);
+  GLfloat planeDirection[4] = {
+      (float)lp[0],
+      (float)lp[1],
+      (float)lp[2],
+      1.0};
+
+  glLightfv(GL_LIGHT1, GL_POSITION, planeLightPos);
+  glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, planeDirection);
   setLights();
 
   renderObjects();
@@ -223,6 +268,18 @@ void keyboard(unsigned char key, int x, int y)
 {
   if (key == 'c')
     thirdPersonCamera = !thirdPersonCamera;
+  else if (key == '2')
+    headlightOn = !headlightOn;
+  else if (key == '1')
+    omnilightOn = !omnilightOn;
+  else if (key == 'l')
+    lightingOn = !lightingOn;
+  else if (key == 'S')
+    flatShading = true;
+  else if (key == 'G')
+    flatShading = false;
+  else if (key == 27)
+    exit(0);
   else
     player.keyDown(key);
 }
