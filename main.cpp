@@ -9,7 +9,7 @@
 #include "textureLoader.cpp"
 #include <chrono>
 
-GLuint textures[2];
+GLuint skyGrass[2];
 
 Player player;
 
@@ -39,10 +39,10 @@ void setLights(void)
   GLfloat red_light[] = {1.0, 0.0, 0.0, 1.0};
 
   glClearColor(1.0, 1.0, 1.0, 1.0);
-  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+  // glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+  // glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  // glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  // glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
   // glLightfv(GL_LIGHT0, GL_POSITION, light_position);
   glLightfv(GL_LIGHT0, GL_AMBIENT, white_light);
@@ -112,7 +112,7 @@ void renderObjects()
   // glColor3f(1.0, 0.0, 0.0);
   for (int i = -20; i < 20; i++)
   {
-    roadHandler.setTranslate(-25, 2, 68 * i);
+    roadHandler.setTranslate(-25, 1, 68 * i);
     roadHandler.render();
   }
   for (int i = 0; i < 10; i++)
@@ -126,7 +126,7 @@ void renderGrass(void)
 {
   glEnable(GL_TEXTURE_2D);
 
-  glBindTexture(GL_TEXTURE_2D, textures[0]);
+  glBindTexture(GL_TEXTURE_2D, skyGrass[0]);
   glBegin(GL_QUADS);
   glTexCoord2f(0.0, 0.0);
   glVertex3f(-1000, 0, -1000);
@@ -137,7 +137,6 @@ void renderGrass(void)
   glTexCoord2f(0.0, 100.0);
   glVertex3f(1000, 0.0, -1000);
   glEnd();
-
   glDisable(GL_TEXTURE_2D);
 }
 
@@ -184,7 +183,7 @@ void display(void)
 
   glPushMatrix();
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, textures[1]);
+  glBindTexture(GL_TEXTURE_2D, skyGrass[1]);
   glTranslatef(viewer[0], viewer[1], viewer[2]);
   glutSolidSphere(450, 50, 30);
   glDisable(GL_TEXTURE_2D);
@@ -218,26 +217,29 @@ void SpecialInput(int key, int x, int y)
 
 void loadObjects()
 {
-  planeHandler.load("plane2/TAL16OBJ.obj");
+  planeHandler.load("plane2/TAL16OBJ");
   planeHandler.setRotateYZ(-90);
   planeHandler.setScale(10);
   planeHandler.setTranslate(-40, 5, -70);
 
-  planeHandler2.load("plane3/AN-24PB_obj.obj");
+  planeHandler2.load("plane3/AN-24PB_obj");
   planeHandler2.setRotateYZ(-90);
   planeHandler2.setRotateXZ(90);
   planeHandler2.setTranslate(-40, 0, 0);
 
-  missileHandler.load("missile/AVMT300.obj");
+  missileHandler.load("missile/AVMT300");
   missileHandler.setScale(0.5);
   missileHandler.setRotateXZ(90);
   missileHandler.setTranslate(-40, 0, 50);
 
-  roadHandler.load("road/roadV2.obj");
+  roadHandler.load("road/roadV2");
   roadHandler.setScale(20);
 
-  buildingHandler.load("building/building.obj");
+  buildingHandler.load("building/building");
   buildingHandler.setScale(0.2);
+
+  loadTextures(skyGrass);
+  player.load();
 }
 
 void mouseMove(GLint x, GLint y)
@@ -292,7 +294,6 @@ void keyboardUp(unsigned char key, int x, int y)
 int main(int argc, char **argv)
 {
   Logger::clear();
-  loadObjects();
 
   // O player que trata o movimento do mouse, portanto precisa saber
   // qual é o tamanho da tela pra saber qual a posição do mouse.
@@ -306,7 +307,7 @@ int main(int argc, char **argv)
   glutInitWindowSize(width, height);
   glutCreateWindow("78390");
   glutInitWindowPosition(0, 0);
-  loadTextures(textures);
+  loadObjects();
   glutSpecialFunc(SpecialInput);
   glutSpecialUpFunc(SpecialInputUp);
   glutKeyboardFunc(keyboard);

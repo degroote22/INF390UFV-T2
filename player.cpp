@@ -30,14 +30,14 @@ public:
   void specialUp(int key);
   void specialDown(int key);
   void reset();
-  Player();
+  void load();
 
 private:
   void hover(bool up);
   void walkFrontway(bool forward);
   void rotateXZ(double angle);
   void rotateYZ(double angle);
-  GLdouble pos[3] = {0, 0, -150};
+  GLdouble pos[3] = {0, 0, -20};
   GLdouble vel[3] = {0, 0, 0};
   int width = 0;
   int height = 0;
@@ -61,6 +61,12 @@ private:
   bool upPressed = false;
   bool downPressed = false;
 };
+
+void Player::load()
+{
+  handler.load("plane2/TAL16OBJ");
+  handler.setScale(5);
+}
 
 void Player::reset()
 {
@@ -208,10 +214,15 @@ void Player::updateLoop()
   {
     yzAngleBucket = TURNING_ANGLE * velSq;
   }
-  if (downPressed)
+  else if (downPressed)
   {
     yzAngleBucket = -TURNING_ANGLE * velSq;
   }
+  else
+  {
+    yzAngleBucket = -yzRotation / 25;
+  }
+
   if (leftPressed)
   {
     xzAngleBucket = 2 * -TURNING_ANGLE * velSq;
@@ -242,22 +253,16 @@ void Player::updateLoop()
   yzAngleBucket = yzAngleBucket * SPEED_DECAY;
 
   // Não passa do ângulo máximo.
-  yzRotation = std::max<double>(yzRotation, -30);
-  yzRotation = std::min<double>(yzRotation, 30);
+  yzRotation = std::max<double>(yzRotation, -15);
+  yzRotation = std::min<double>(yzRotation, 15);
 }
 
 void Player::render()
 {
-  handler.setTranslate(pos[0], pos[1], pos[2]);
+  handler.setTranslate(pos[0], pos[1] + 3, pos[2]);
   handler.setRotateXZ(-xzRotation);
-  handler.setRotateYZ(-yzRotation);
+  handler.setRotateYZ(-90 - yzRotation);
   handler.render();
-}
-
-Player::Player()
-{
-  handler.load("plane/FA38_Airborne2.obj");
-  handler.setScale(5);
 }
 
 void Player::getLooking(GLdouble *looking)

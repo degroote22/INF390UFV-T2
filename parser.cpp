@@ -5,6 +5,7 @@
 #include <fstream>
 #include <GL/glut.h>
 #include "logger.cpp"
+#include "mtlParser.cpp"
 #include <sstream>
 #include <vector>
 
@@ -13,6 +14,7 @@ struct FacePoint
   int vertice;
   int texture;
   int normal;
+  int material;
 };
 
 class Parser
@@ -24,6 +26,8 @@ private:
   GLdouble *params;
 
   std::vector<FacePoint> *faces;
+
+  int currentMaterial = 0;
 
   int numberFaces = 0;
   int facesRead = 0;
@@ -49,6 +53,8 @@ private:
   void parseParamLine(const std::string str);
 
 public:
+  MtlParser materialParser;
+
   void parseFile(const std::string filename);
 
   GLdouble *getVertices() { return vertices; }
@@ -173,6 +179,7 @@ void Parser::parseFaceLine(const std::string str)
       fp0.vertice = x;
       fp0.normal = normal;
       fp0.texture = texture;
+      fp0.material = currentMaterial;
       faces[facesRead].push_back(fp0);
 
       while (true)
@@ -198,6 +205,8 @@ void Parser::parseFaceLine(const std::string str)
           fp.vertice = x;
           fp.normal = normal;
           fp.texture = texture;
+          fp.material = currentMaterial;
+
           faces[facesRead].push_back(fp);
         }
         catch (std::invalid_argument err)
@@ -214,6 +223,8 @@ void Parser::parseFaceLine(const std::string str)
       fp0.vertice = x;
       fp0.texture = texture;
       fp0.normal = 0;
+      fp0.material = currentMaterial;
+
       faces[facesRead].push_back(fp0);
       while (true)
       {
@@ -233,6 +244,8 @@ void Parser::parseFaceLine(const std::string str)
           fp.vertice = x;
           fp.texture = texture;
           fp.normal = 0;
+          fp.material = currentMaterial;
+
           faces[facesRead].push_back(fp);
         }
         catch (std::invalid_argument err)
@@ -248,6 +261,8 @@ void Parser::parseFaceLine(const std::string str)
     FacePoint fp0;
     fp0.vertice = x;
     fp0.normal = 0;
+    fp0.material = currentMaterial;
+
     faces[facesRead].push_back(fp0);
     while (true)
     {
@@ -258,6 +273,8 @@ void Parser::parseFaceLine(const std::string str)
         FacePoint fp;
         fp.vertice = x;
         fp.normal = 0;
+        fp.material = currentMaterial;
+
         faces[facesRead].push_back(fp);
       }
       catch (std::invalid_argument err)
@@ -276,6 +293,8 @@ void Parser::parseFaceLine(const std::string str)
     FacePoint fp0;
     fp0.vertice = x;
     fp0.normal = normal;
+    fp0.material = currentMaterial;
+
     faces[facesRead].push_back(fp0);
 
     while (true)
@@ -291,6 +310,8 @@ void Parser::parseFaceLine(const std::string str)
         FacePoint fp;
         fp.vertice = x;
         fp.normal = normal;
+        fp.material = currentMaterial;
+
         faces[facesRead].push_back(fp);
       }
       catch (std::invalid_argument err)
@@ -304,7 +325,16 @@ void Parser::parseFaceLine(const std::string str)
 
 void Parser::parseLine(const std::string str)
 {
-  if (str[0] == 'f')
+  if (str[0] == 'u' && str[1] == 's' && str[2] == 'e')
+  {
+    std::stringstream ss(str);
+    std::string name;
+    ss >> name;
+    ss >> name;
+    auto map = materialParser.getMaterialsNameMap();
+    currentMaterial = map[name];
+  }
+  else if (str[0] == 'f')
   {
     parseFaceLine(str);
     // std::ostringstream s;
@@ -344,9 +374,11 @@ void Parser::parseLine(const std::string str)
 
 void Parser::parseFile(const std::string filename)
 {
-  std::ifstream file(filename.c_str());
+  materialParser.parseFile(filename);
+
+  std::ifstream obj((filename + ".obj").c_str());
   std::string str;
-  while (std::getline(file, str))
+  while (std::getline(obj, str))
   {
     preParseLine(str);
   }
@@ -356,9 +388,9 @@ void Parser::parseFile(const std::string filename)
   textures = new GLdouble[numberTextures * 2];
   faces = new std::vector<FacePoint>[numberFaces];
 
-  file.clear();
-  file.seekg(0, std::ios::beg);
-  while (std::getline(file, str))
+  obj.clear();
+  obj.seekg(0, std::ios::beg);
+  while (std::getline(obj, str))
   {
     parseLine(str);
   }
