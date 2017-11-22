@@ -3,6 +3,7 @@
 
 #include <GL/glut.h>
 #include "parser.cpp"
+#include "helpers.cpp"
 #include <string>
 #include <stdlib.h> /* srand, rand */
 #include <time.h>   /* time */
@@ -58,11 +59,12 @@ void Handler::load(std::string filename)
 void Handler::render()
 {
   glPushMatrix();
-  glColor3f(0.0, 0.0, 0.0);
 
   glTranslated(translate[0], translate[1], translate[2]);
+
   glRotated(rotateXZDeg, 0, 1, 0);
   glRotated(rotateYZDeg, 1, 0, 0);
+
   glScalef(scale, scale, scale);
 
   for (int i = 0; i < facesN; i++)
